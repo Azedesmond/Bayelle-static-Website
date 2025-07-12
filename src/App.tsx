@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import { 
   Clock, 
   Mail, 
@@ -54,9 +55,16 @@ const ServiceCard: React.FC<{
 
 function App() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 50, hours: 0, minutes: 0, seconds: 0 });
-  const [email, setEmail] = useState('contact@beyellecreditunion.com');
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [email, setEmail] = useState('');
   const [isValidEmail, setIsValidEmail] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  // Initialize EmailJS (you'll need to replace these with your actual EmailJS credentials)
+  useEffect(() => {
+    emailjs.init("FiwKEpKbgtrii_-wy"); // Replace with your EmailJS public key
+  }, []);
 
   useEffect(() => {
     // Set initial countdown to 50 days from now
@@ -80,8 +88,9 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!emailRegex.test(email)) {
@@ -90,8 +99,32 @@ function App() {
     }
     
     setIsValidEmail(true);
-    setIsSubscribed(true);
-    setEmail('contact@bayellecreditunion.com');
+    setIsSubmitting(true);
+
+    try {
+      // Send email using EmailJS
+      await emailjs.send(
+        'service_4t9267c', // Replace with your EmailJS service ID
+        'template_yv07zka', // Replace with your EmailJS template ID
+        {
+          to_email: 'contact@bayellecreditunion.com',
+          from_email: email,
+          subject: 'New Website Launch Notification Request - BaCCUL',
+          message: `New subscriber from BaCCUL website: ${email} would like to be notified when the website launches.`,
+          subscriber_email: email,
+          website_name: 'Bayelle Credit Union Ltd (BaCCUL)',
+          request_date: new Date().toLocaleDateString(),
+        }
+      );
+      
+      setIsSubscribed(true);
+      setEmail('');
+    } catch (error) {
+      console.error('EmailJS Error:', error);
+      setSubmitError('Failed to send notification request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const services = [
@@ -233,7 +266,7 @@ function App() {
               <div className="bg-white rounded-xl p-6 max-w-md mx-auto">
                 <CheckCircle className="text-green-500 mx-auto mb-4" size={48} />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
-                <p className="text-gray-600">We'll notify you when we launch.</p>
+                <p className="text-gray-600">We've received your request and will notify you when we launch!</p>
               </div>
             ) : (
               <form onSubmit={handleEmailSubmit} className="max-w-md mx-auto">
@@ -248,6 +281,7 @@ function App() {
                         !isValidEmail ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'
                       }`}
                       required
+                      disabled={isSubmitting}
                     />
                     {!isValidEmail && (
                       <p className="text-red-300 text-sm mt-1">Please enter a valid email address</p>
@@ -255,13 +289,19 @@ function App() {
                   </div>
                   <button
                     type="submit"
-                    className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
+                    disabled={isSubmitting}
+                    className="bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-blue-900 font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center space-x-2 min-w-[140px]"
                   >
                     <Mail size={20} />
-                    <span>Notify Me</span>
+                    <span>{isSubmitting ? 'Sending...' : 'Notify Me'}</span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
+                {submitError && (
+                  <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    <p className="text-sm">{submitError}</p>
+                  </div>
+                )}
               </form>
             )}
           </div>
