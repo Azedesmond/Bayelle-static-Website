@@ -54,7 +54,7 @@ const ServiceCard: React.FC<{
 
 function App() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 50, hours: 0, minutes: 0, seconds: 0 });
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('contact@beyellecreditunion.com');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isValidEmail, setIsValidEmail] = useState(true);
 
@@ -91,7 +91,7 @@ function App() {
     
     setIsValidEmail(true);
     setIsSubscribed(true);
-    setEmail('');
+    setEmail('contact@bayellecreditunion.com');
   };
 
   const services = [
